@@ -265,6 +265,26 @@ use Support\BaseController;
         date_default_timezone_set('Asia/Jakarta');
     }
 
+    function storeFile($file, $targetDirectory)
+    {
+        // Cek apakah ada file yang diunggah
+        if ($file['error'] === UPLOAD_ERR_OK) {
+            $tmpName = $file['tmp_name'];
+            $originalName = basename($file['name']);
+            $targetPath = rtrim($targetDirectory, '/') . '/' . $originalName;
+
+            // Pindahkan file dari lokasi sementara ke tujuan
+            if (move_uploaded_file($tmpName, $targetPath)) {
+                return ['status' => 'success', 'message' => 'File berhasil diunggah.', 'path' => $targetPath];
+            } else {
+                return ['status' => 'error', 'message' => 'Terjadi kesalahan saat memindahkan file.'];
+            }
+        } else {
+            return ['status' => 'error', 'message' => 'File gagal diunggah.'];
+        }
+    }
+
+
     if (!function_exists('storage_path')) {
         function storage_path($path = '')
         {
@@ -280,28 +300,28 @@ use Support\BaseController;
     }
 
     function env($key, $default = null)
-{
-    static $env = null;
+    {
+        static $env = null;
 
-    if ($env === null) {
-        $envFilePath = __DIR__ . '/../../.env';
-        if (file_exists($envFilePath)) {
-            $env = parse_ini_file($envFilePath, false, INI_SCANNER_RAW);
-            if ($env === false) {
+        if ($env === null) {
+            $envFilePath = __DIR__ . '/../../.env';
+            if (file_exists($envFilePath)) {
+                $env = parse_ini_file($envFilePath, false, INI_SCANNER_RAW);
+                if ($env === false) {
+                    $env = [];
+                }
+            } else {
                 $env = [];
             }
-        } else {
-            $env = [];
+
+            // Set ke $_ENV untuk kompatibilitas jika diperlukan
+            foreach ($env as $envKey => $envValue) {
+                $_ENV[$envKey] = $envValue;
+            }
         }
 
-        // Set ke $_ENV untuk kompatibilitas jika diperlukan
-        foreach ($env as $envKey => $envValue) {
-            $_ENV[$envKey] = $envValue;
-        }
+        // Ambil nilai berdasarkan key
+        return array_key_exists($key, $env) ? $env[$key] : $default;
     }
-
-    // Ambil nilai berdasarkan key
-    return array_key_exists($key, $env) ? $env[$key] : $default;
-}
     
 ?>

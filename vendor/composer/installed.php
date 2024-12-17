@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'fadli-dev/treant',
-        'pretty_version' => 'v1.3',
-        'version' => '1.3.0.0',
-        'reference' => null,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '2c8caaf5ffeff1d4331641471376e631915f1b17',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'fadli-dev/treant' => array(
-            'pretty_version' => 'v1.3',
-            'version' => '1.3.0.0',
-            'reference' => null,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '2c8caaf5ffeff1d4331641471376e631915f1b17',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -88,6 +88,15 @@
             'reference' => '764e0b3939f5ca87cb904f570ef9be2d78a07865',
             'type' => 'library',
             'install_path' => __DIR__ . '/../psr/simple-cache',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'setasign/fpdi' => array(
+            'pretty_version' => 'v2.6.2',
+            'version' => '2.6.2.0',
+            'reference' => '9e013b376939c0d4029f54150d2a16f3c67a5797',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../setasign/fpdi',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
