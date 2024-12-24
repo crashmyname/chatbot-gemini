@@ -10,3 +10,6 @@ use Support\AuthMiddleware; //<-- Penambahan Middleware atau session login
 // });
 Route::get('/',[AiController::class, 'chat']);
 Route::post('/gemini',[AiController::class, 'chat']);
+Route::get('/tailwind', function(){
+    return view('tailwind');
+});
