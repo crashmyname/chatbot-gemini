@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,7 +55,18 @@
             background-color: #0056b3;
         }
 
-        #response-container, #error-container {
+        button[disabled] {
+            /* Menargetkan button dengan atribut disabled */
+            background-color: #ccc;
+            /* Warna abu-abu untuk menandakan disabled */
+            cursor: not-allowed;
+            /* Mengubah kursor menjadi "not allowed" */
+            opacity: 0.7;
+            /* Membuatnya sedikit transparan */
+        }
+
+        #response-container,
+        #error-container {
             display: none;
         }
 
@@ -65,6 +77,7 @@
         }
     </style>
 </head>
+
 <body>
     <h1>AI Gemini Chat</h1>
 
@@ -73,7 +86,8 @@
         <?= csrf() ?>
         <label for="question">Tanyakan sesuatu:</label><br>
         <textarea name="question" id="question" rows="4" cols="50" placeholder="Ketik pertanyaan Anda..." required></textarea><br>
-        <button type="submit">Kirim</button>
+        <button type="submit" id="submit">Kirim</button>
+        <button disabled style="display:none" id="loading"> Loading ..</button>
     </form>
 
     <!-- Kontainer untuk Menampilkan Jawaban -->
@@ -90,68 +104,87 @@
 
     <!-- Script AJAX + Typewriter Effect -->
     <script>
-    document.getElementById('gemini-form').addEventListener('submit', async function(event) {
-        event.preventDefault(); // Mencegah reload halaman
+        document.getElementById('gemini-form').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Mencegah reload halaman
+            const submit = document.getElementById('submit');
+            const loading = document.getElementById('loading');
+            submit.style.display = "none";
+            loading.style.display = "block";
+            // Ambil data form
+            const form = event.target;
+            const formData = new FormData(form);
 
-        // Ambil data form
-        const form = event.target;
-        const formData = new FormData(form);
+            // Kosongkan elemen respon/error sebelumnya
+            const responseContainer = document.getElementById('response-container');
+            const errorContainer = document.getElementById('error-container');
+            const responseText = document.getElementById('response-text');
+            const errorMessage = document.getElementById('error-message');
 
-        // Kosongkan elemen respon/error sebelumnya
-        const responseContainer = document.getElementById('response-container');
-        const errorContainer = document.getElementById('error-container');
-        const responseText = document.getElementById('response-text');
-        const errorMessage = document.getElementById('error-message');
+            responseContainer.style.display = 'none';
+            errorContainer.style.display = 'none';
+            responseText.innerText = '';
+            errorMessage.innerText = '';
 
-        responseContainer.style.display = 'none';
-        errorContainer.style.display = 'none';
-        responseText.innerText = '';
-        errorMessage.innerText = '';
+            try {
+                // Kirim data menggunakan fetch
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest', // Penanda AJAX request
+                    },
+                    body: formData
+                });
 
-        try {
-            // Kirim data menggunakan fetch
-            const response = await fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest', // Penanda AJAX request
-                },
-                body: formData
-            });
+                // Validasi respons dari server
+                const result = await response.json();
 
-            // Validasi respons dari server
-            const result = await response.json();
+                if (response.ok && result.response) {
+                    submit.style.display = "block";
+                    loading.style.display = "none";
+                    responseContainer.style.display = 'block';
 
-            if (response.ok && result.response) {
-                responseContainer.style.display = 'block';
+                    const fullResponse = Array.isArray(result.response) ? result.response.join(' ') : result.response;
+                    const trimmedResponse = fullResponse.trim();
 
-                // Ambil jawaban dari server (asumsi berupa string)
-                const fullResponse = Array.isArray(result.response) ? result.response.join(' ') : result.response;
+                    // Cek apakah hasil merupakan kode yang diawali dan diakhiri ```
+                const codeMatch = trimmedResponse.match(/^```(?:\w+)?\n([\s\S]*?)\n```$/);
 
-                // Efek mengetik satu per satu
-                typeWriterEffect(fullResponse, responseText, 20);
-            } else {
-                throw new Error(result.error || 'Terjadi kesalahan saat memproses permintaan.');
+                if (codeMatch) {
+                    // Jika hasil adalah kode, tampilkan dalam elemen <pre><code>
+                    responseText.innerHTML =
+                        `<pre><code>${codeMatch[1].replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`;
+                }
+                // Cek jika hasil adalah "** test **", ubah menjadi title
+                else if (trimmedResponse === "** test **") {
+                    responseText.innerHTML = `<h2>Test</h2>`;
+                    }
+                    // Efek mengetik untuk hasil biasa
+                    else {
+                        typeWriterEffect(fullResponse, responseText, 20);
+                    }
+                }
+
+            } catch (error) {
+                // Tampilkan error di layar
+                console.error('Error:', error);
+                errorMessage.innerText = error.message;
+                errorContainer.style.display = 'block';
             }
-        } catch (error) {
-            // Tampilkan error di layar
-            console.error('Error:', error);
-            errorMessage.innerText = error.message;
-            errorContainer.style.display = 'block';
+        });
+
+        // Fungsi Typewriter Effect
+        function typeWriterEffect(text, element, speed) {
+            let index = 0;
+            const typing = setInterval(() => {
+                if (index < text.length) {
+                    element.innerText += text[index];
+                    index++;
+                } else {
+                    clearInterval(typing); // Hentikan efek jika sudah selesai
+                }
+            }, speed);
         }
-    });
-
-    // Fungsi Typewriter Effect
-    function typeWriterEffect(text, element, speed) {
-        let index = 0;
-        const typing = setInterval(() => {
-            if (index < text.length) {
-                element.innerText += text[index];
-                index++;
-            } else {
-                clearInterval(typing); // Hentikan efek jika sudah selesai
-            }
-        }, speed);
-    }
     </script>
 </body>
+
 </html>
